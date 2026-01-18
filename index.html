@@ -1,0 +1,983 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keyboard Tester - Premium Key Testing Tool</title>
+    
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    
+    <!-- Custom Styles -->
+    <style>
+        /* 
+         * KEYBOARD TESTER - Premium One-Page Application
+         * 
+         * How to run:
+         * 1. Open index.html in any modern browser (Chrome, Firefox, Safari)
+         * 2. No build step required - works directly from file system
+         * 3. Press any key on your physical keyboard or click keys on screen
+         * 
+         * Customization:
+         * - Theme colors: Modify Tailwind classes (bg-slate-900, text-cyan-400, etc.)
+         * - Key colors: Change .key-active, .key-pressed classes
+         * - Animation speed: Adjust transition durations in CSS
+         * 
+         * Deployment:
+         * - GitHub Pages: Push to repo, enable Pages in settings
+         * - Netlify: Drag & drop index.html
+         * - Vercel: Import repo, set build command to none
+         */
+        
+        :root {
+            --glow-color: rgba(34, 211, 238, 0.5);
+            --glow-color-light: rgba(34, 211, 238, 0.3);
+        }
+        
+        /* Background Animation - Subtle gradient wave */
+        @keyframes gradientWave {
+            0%, 100% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+        }
+        
+        .bg-animated {
+            background: linear-gradient(-45deg, #0f172a, #1e293b, #0f172a, #1e1b4b);
+            background-size: 400% 400%;
+            animation: gradientWave 15s ease infinite;
+        }
+        
+        /* Key Styles */
+        .key {
+            transition: all 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+            position: relative;
+            overflow: hidden;
+        }
+        
+        .key:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(34, 211, 238, 0.2);
+        }
+        
+        .key-active {
+            transform: scale(0.95);
+            box-shadow: 0 0 20px var(--glow-color), 0 0 40px var(--glow-color-light);
+            background: linear-gradient(135deg, rgba(34, 211, 238, 0.2), rgba(59, 130, 246, 0.2));
+            border-color: rgb(34, 211, 238);
+        }
+        
+        .key-pressed {
+            animation: keyPress 0.3s ease;
+        }
+        
+        @keyframes keyPress {
+            0% { transform: scale(1); }
+            50% { transform: scale(0.92); }
+            100% { transform: scale(0.95); }
+        }
+        
+        /* Ripple Effect */
+        .key::before {
+            content: '';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            width: 0;
+            height: 0;
+            border-radius: 50%;
+            background: rgba(255, 255, 255, 0.3);
+            transform: translate(-50%, -50%);
+            transition: width 0.6s, height 0.6s;
+        }
+        
+        .key.ripple::before {
+            width: 300px;
+            height: 300px;
+        }
+        
+        /* Keyboard Grid Animation */
+        @keyframes slideIn {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        
+        .keyboard-grid {
+            animation: slideIn 0.6s ease-out;
+        }
+        
+        .keyboard-grid > * {
+            animation: slideIn 0.6s ease-out backwards;
+        }
+        
+        .keyboard-grid > *:nth-child(1) { animation-delay: 0.05s; }
+        .keyboard-grid > *:nth-child(2) { animation-delay: 0.1s; }
+        .keyboard-grid > *:nth-child(3) { animation-delay: 0.15s; }
+        .keyboard-grid > *:nth-child(4) { animation-delay: 0.2s; }
+        .keyboard-grid > *:nth-child(5) { animation-delay: 0.25s; }
+        .keyboard-grid > *:nth-child(6) { animation-delay: 0.3s; }
+        .keyboard-grid > *:nth-child(7) { animation-delay: 0.35s; }
+        
+        /* Info Panel */
+        .info-panel {
+            transition: all 0.3s ease;
+            opacity: 0;
+            transform: translate(-50%, -10px);
+        }
+        
+        .info-panel.show {
+            opacity: 1;
+            transform: translate(-50%, 0);
+        }
+        
+        /* Focus Ring */
+        .key:focus-visible {
+            outline: 2px solid rgb(34, 211, 238);
+            outline-offset: 2px;
+        }
+        
+        /* Compact Mobile Layout */
+        @media (max-width: 768px) {
+            .key {
+                padding: 0.4rem 0.3rem;
+                font-size: 0.7rem;
+                height: 3rem;
+            }
+            
+            .keyboard-grid {
+                gap: 0.25rem;
+                padding: 0.75rem;
+            }
+            
+            .keyboard-grid .flex {
+                gap: 0.25rem;
+            }
+            
+            #infoPanel {
+                padding: 0.75rem;
+                font-size: 0.875rem;
+                max-width: 90%;
+            }
+        }
+        
+        /* Light Theme */
+        .light-theme {
+            --glow-color: rgba(59, 130, 246, 0.4);
+            --glow-color-light: rgba(59, 130, 246, 0.2);
+        }
+        
+        .light-theme .bg-animated {
+            background: linear-gradient(-45deg, #f8fafc, #e2e8f0, #f1f5f9, #e0e7ff);
+        }
+        
+        .light-theme .key {
+            background: rgba(255, 255, 255, 0.7);
+            border-color: rgba(148, 163, 184, 0.5);
+            color: #1e293b;
+        }
+        
+        .light-theme .key-active {
+            background: linear-gradient(135deg, rgba(59, 130, 246, 0.3), rgba(99, 102, 241, 0.3));
+            border-color: rgb(59, 130, 246);
+        }
+        
+        .light-theme .text-slate-300 {
+            color: #475569;
+        }
+        
+        .light-theme .text-slate-400 {
+            color: #64748b;
+        }
+        
+        .light-theme .text-slate-500 {
+            color: #64748b;
+        }
+        
+        .light-theme .text-slate-600 {
+            color: #475569;
+        }
+        
+        .light-theme .bg-slate-800\/50 {
+            background-color: rgba(255, 255, 255, 0.7);
+        }
+        
+        .light-theme .bg-slate-800\/90 {
+            background-color: rgba(255, 255, 255, 0.95);
+        }
+        
+        .light-theme .bg-slate-800\/30 {
+            background-color: rgba(255, 255, 255, 0.5);
+        }
+        
+        .light-theme .bg-slate-900\/50 {
+            background-color: rgba(241, 245, 249, 0.7);
+        }
+        
+        .light-theme .border-slate-700 {
+            border-color: rgba(148, 163, 184, 0.5);
+        }
+        
+        .light-theme .border-slate-600 {
+            border-color: rgba(148, 163, 184, 0.4);
+        }
+        
+        .light-theme .border-slate-600\/50 {
+            border-color: rgba(148, 163, 184, 0.3);
+        }
+        
+        .light-theme .bg-slate-700\/30 {
+            background-color: rgba(241, 245, 249, 0.5);
+        }
+        
+        .light-theme #infoPanel {
+            color: #1e293b;
+        }
+        
+        .light-theme #infoPanel .text-white {
+            color: #1e293b;
+        }
+        
+        /* No JS Fallback */
+        .no-js-message {
+            display: none;
+        }
+        
+        .no-js .no-js-message {
+            display: block;
+        }
+        
+        .no-js .keyboard-container {
+            display: none;
+        }
+        
+        /* Typing Area */
+        .typing-area {
+            font-family: 'Courier New', monospace;
+        }
+        
+        /* Onboarding Tooltip */
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .onboarding-tooltip {
+            animation: pulse 2s ease-in-out infinite;
+        }
+    </style>
+</head>
+<body class="bg-slate-900 text-white min-h-screen overflow-x-hidden">
+    <!-- No JS Fallback -->
+    <noscript>
+        <div class="no-js-message fixed inset-0 flex items-center justify-center bg-slate-900 text-white z-50">
+            <div class="text-center p-8">
+                <h1 class="text-3xl font-bold mb-4">JavaScript Required</h1>
+                <p class="text-lg">Please enable JavaScript to use the Keyboard Tester.</p>
+            </div>
+        </div>
+    </noscript>
+    
+    <!-- Background Animation -->
+    <div class="bg-animated fixed inset-0 -z-10"></div>
+    
+    <!-- Main Container -->
+    <div class="container mx-auto px-4 py-8 max-w-7xl">
+        <!-- Header -->
+        <header class="text-center mb-6 md:mb-8">
+            <h1 class="text-4xl md:text-5xl lg:text-6xl font-bold mb-3 md:mb-4 bg-gradient-to-r from-cyan-400 via-blue-400 to-purple-400 bg-clip-text text-transparent">
+                Keyboard Tester
+            </h1>
+            <p class="text-lg md:text-xl text-slate-300 mb-4 md:mb-6 px-4">
+                Press any key to test your keyboard • Premium testing experience
+            </p>
+            
+            <!-- Controls -->
+            <div class="flex flex-wrap justify-center gap-2 md:gap-4 mb-4 md:mb-6 px-4">
+                <button 
+                    id="themeToggle" 
+                    class="px-3 md:px-4 py-2 text-sm md:text-base bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    aria-label="Toggle theme"
+                >
+                    <span id="themeText">🌙 Dark</span>
+                </button>
+                <button 
+                    id="soundToggle" 
+                    class="px-3 md:px-4 py-2 text-sm md:text-base bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    aria-label="Toggle sound"
+                >
+                    <span id="soundText">🔇 Sound Off</span>
+                </button>
+                <button 
+                    id="typingAreaToggle" 
+                    class="px-3 md:px-4 py-2 text-sm md:text-base bg-slate-800/50 backdrop-blur-sm rounded-lg border border-slate-700 hover:bg-slate-700/50 transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    aria-label="Toggle typing area"
+                >
+                    <span id="typingAreaText" class="hidden md:inline">⌨️ Typing Area Off</span>
+                    <span id="typingAreaTextMobile" class="md:hidden">⌨️ Type</span>
+                </button>
+                <button 
+                    id="testReportBtn" 
+                    class="px-3 md:px-4 py-2 text-sm md:text-base bg-cyan-600 hover:bg-cyan-500 rounded-lg transition-all focus:outline-none focus:ring-2 focus:ring-cyan-400"
+                    aria-label="Generate test report"
+                >
+                    <span class="hidden md:inline">📊 Test Report</span>
+                    <span class="md:hidden">📊 Report</span>
+                </button>
+            </div>
+        </header>
+        
+        <!-- Onboarding Tooltip -->
+        <div id="onboardingTooltip" class="text-center mb-4 md:mb-6 onboarding-tooltip">
+            <p class="text-cyan-400 text-base md:text-lg font-semibold">Press any key to begin testing</p>
+        </div>
+        
+        <!-- Info Panel -->
+        <div id="infoPanel" class="info-panel fixed top-24 md:top-20 left-1/2 bg-slate-800/90 backdrop-blur-md rounded-lg p-4 border border-cyan-500/50 shadow-2xl pointer-events-none z-40">
+            <div class="text-center">
+                <div class="text-cyan-400 font-semibold mb-2">Key Pressed</div>
+                <div class="text-sm space-y-1">
+                    <div><span class="text-slate-400">Key:</span> <span id="infoKey" class="text-white font-mono">-</span></div>
+                    <div><span class="text-slate-400">Code:</span> <span id="infoCode" class="text-white font-mono">-</span></div>
+                    <div><span class="text-slate-400">KeyCode:</span> <span id="infoKeyCode" class="text-white font-mono">-</span></div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Typing Area (Optional) -->
+        <div id="typingArea" class="hidden mb-6 max-w-2xl mx-auto">
+            <div class="bg-slate-800/50 backdrop-blur-sm rounded-lg p-4 border border-slate-700">
+                <label class="block text-sm text-slate-400 mb-2">Live Typing Area</label>
+                <div 
+                    id="typingContent" 
+                    class="typing-area min-h-[100px] p-4 bg-slate-900/50 rounded border border-slate-700 text-slate-300 whitespace-pre-wrap break-words"
+                    contenteditable="true"
+                    role="textbox"
+                    aria-label="Typing area"
+                    tabindex="0"
+                ></div>
+                <p class="text-xs text-slate-500 mt-2">Note: This area captures typed characters. Toggle off to test global key events.</p>
+            </div>
+        </div>
+        
+        <!-- Keyboard Container -->
+        <div class="keyboard-container mb-6">
+            <div id="keyboard" class="keyboard-grid max-w-6xl mx-auto bg-slate-800/30 backdrop-blur-sm rounded-2xl p-4 md:p-6 border border-slate-700/50 shadow-2xl">
+                <!-- Keyboard will be generated here -->
+            </div>
+        </div>
+        
+        <!-- Active Modifiers -->
+        <div id="activeModifiers" class="text-center mb-4 text-slate-400">
+            <span class="text-sm">Active Modifiers: </span>
+            <span id="modifiersText" class="text-cyan-400 font-mono font-semibold">None</span>
+        </div>
+        
+        <!-- Last Keys Area -->
+        <div class="mt-6 md:mt-8 max-w-4xl mx-auto px-4">
+            <h2 class="text-xl md:text-2xl font-bold mb-3 md:mb-4 text-center text-cyan-400">Last Keys</h2>
+            <div id="lastKeys" class="bg-slate-800/50 backdrop-blur-sm rounded-lg p-3 md:p-4 border border-slate-700 min-h-[120px] md:min-h-[150px] max-h-[300px] overflow-y-auto">
+                <p class="text-slate-500 text-center">No keys pressed yet...</p>
+            </div>
+        </div>
+        
+        <!-- ARIA Live Region for Screen Readers -->
+        <div id="ariaLive" class="sr-only" aria-live="polite" aria-atomic="true"></div>
+    </div>
+    
+    <!-- Screen Reader Only Class -->
+    <style>
+        .sr-only {
+            position: absolute;
+            width: 1px;
+            height: 1px;
+            padding: 0;
+            margin: -1px;
+            overflow: hidden;
+            clip: rect(0, 0, 0, 0);
+            white-space: nowrap;
+            border-width: 0;
+        }
+    </style>
+    
+    <script>
+        /*
+         * KEYBOARD TESTER - JavaScript Implementation
+         * 
+         * Features:
+         * - Physical keyboard event detection
+         * - Visual keyboard with click support
+         * - Combo detection (Ctrl+Shift+P, etc.)
+         * - Theme toggle (Dark/Light)
+         * - Sound effects (optional)
+         * - Test report generation
+         * - Accessibility support
+         */
+        
+        // State Management
+        const state = {
+            activeKeys: new Set(),
+            lastKeys: [],
+            maxLastKeys: 10,
+            soundEnabled: false,
+            typingAreaEnabled: false,
+            isDarkTheme: true,
+            keyMap: new Map(),
+            stats: {
+                totalPresses: 0,
+                uniqueKeys: new Set(),
+                combos: []
+            }
+        };
+        
+        // Key Layout Configuration
+        const keyLayout = [
+            // Row 1
+            [{ key: 'Escape', label: 'Esc', code: 'Escape', width: 'w-20' }],
+            // Row 2
+            [
+                { key: 'Backquote', label: '`', code: 'Backquote', width: 'w-16' },
+                { key: 'Digit1', label: '1', code: 'Digit1', width: 'w-16' },
+                { key: 'Digit2', label: '2', code: 'Digit2', width: 'w-16' },
+                { key: 'Digit3', label: '3', code: 'Digit3', width: 'w-16' },
+                { key: 'Digit4', label: '4', code: 'Digit4', width: 'w-16' },
+                { key: 'Digit5', label: '5', code: 'Digit5', width: 'w-16' },
+                { key: 'Digit6', label: '6', code: 'Digit6', width: 'w-16' },
+                { key: 'Digit7', label: '7', code: 'Digit7', width: 'w-16' },
+                { key: 'Digit8', label: '8', code: 'Digit8', width: 'w-16' },
+                { key: 'Digit9', label: '9', code: 'Digit9', width: 'w-16' },
+                { key: 'Digit0', label: '0', code: 'Digit0', width: 'w-16' },
+                { key: 'Minus', label: '-', code: 'Minus', width: 'w-16' },
+                { key: 'Equal', label: '=', code: 'Equal', width: 'w-16' },
+                { key: 'Backspace', label: 'Backspace', code: 'Backspace', width: 'w-32' }
+            ],
+            // Row 3
+            [
+                { key: 'Tab', label: 'Tab', code: 'Tab', width: 'w-24' },
+                { key: 'KeyQ', label: 'Q', code: 'KeyQ', width: 'w-16' },
+                { key: 'KeyW', label: 'W', code: 'KeyW', width: 'w-16' },
+                { key: 'KeyE', label: 'E', code: 'KeyE', width: 'w-16' },
+                { key: 'KeyR', label: 'R', code: 'KeyR', width: 'w-16' },
+                { key: 'KeyT', label: 'T', code: 'KeyT', width: 'w-16' },
+                { key: 'KeyY', label: 'Y', code: 'KeyY', width: 'w-16' },
+                { key: 'KeyU', label: 'U', code: 'KeyU', width: 'w-16' },
+                { key: 'KeyI', label: 'I', code: 'KeyI', width: 'w-16' },
+                { key: 'KeyO', label: 'O', code: 'KeyO', width: 'w-16' },
+                { key: 'KeyP', label: 'P', code: 'KeyP', width: 'w-16' },
+                { key: 'BracketLeft', label: '[', code: 'BracketLeft', width: 'w-16' },
+                { key: 'BracketRight', label: ']', code: 'BracketRight', width: 'w-16' },
+                { key: 'Backslash', label: '\\', code: 'Backslash', width: 'w-20' }
+            ],
+            // Row 4
+            [
+                { key: 'CapsLock', label: 'Caps', code: 'CapsLock', width: 'w-28' },
+                { key: 'KeyA', label: 'A', code: 'KeyA', width: 'w-16' },
+                { key: 'KeyS', label: 'S', code: 'KeyS', width: 'w-16' },
+                { key: 'KeyD', label: 'D', code: 'KeyD', width: 'w-16' },
+                { key: 'KeyF', label: 'F', code: 'KeyF', width: 'w-16' },
+                { key: 'KeyG', label: 'G', code: 'KeyG', width: 'w-16' },
+                { key: 'KeyH', label: 'H', code: 'KeyH', width: 'w-16' },
+                { key: 'KeyJ', label: 'J', code: 'KeyJ', width: 'w-16' },
+                { key: 'KeyK', label: 'K', code: 'KeyK', width: 'w-16' },
+                { key: 'KeyL', label: 'L', code: 'KeyL', width: 'w-16' },
+                { key: 'Semicolon', label: ';', code: 'Semicolon', width: 'w-16' },
+                { key: 'Quote', label: "'", code: 'Quote', width: 'w-16' },
+                { key: 'Enter', label: 'Enter', code: 'Enter', width: 'w-28' }
+            ],
+            // Row 5
+            [
+                { key: 'ShiftLeft', label: 'Shift', code: 'ShiftLeft', width: 'w-32' },
+                { key: 'KeyZ', label: 'Z', code: 'KeyZ', width: 'w-16' },
+                { key: 'KeyX', label: 'X', code: 'KeyX', width: 'w-16' },
+                { key: 'KeyC', label: 'C', code: 'KeyC', width: 'w-16' },
+                { key: 'KeyV', label: 'V', code: 'KeyV', width: 'w-16' },
+                { key: 'KeyB', label: 'B', code: 'KeyB', width: 'w-16' },
+                { key: 'KeyN', label: 'N', code: 'KeyN', width: 'w-16' },
+                { key: 'KeyM', label: 'M', code: 'KeyM', width: 'w-16' },
+                { key: 'Comma', label: ',', code: 'Comma', width: 'w-16' },
+                { key: 'Period', label: '.', code: 'Period', width: 'w-16' },
+                { key: 'Slash', label: '/', code: 'Slash', width: 'w-16' },
+                { key: 'ShiftRight', label: 'Shift', code: 'ShiftRight', width: 'w-32' }
+            ],
+            // Row 6
+            [
+                { key: 'ControlLeft', label: 'Ctrl', code: 'ControlLeft', width: 'w-24' },
+                { key: 'MetaLeft', label: 'Meta', code: 'MetaLeft', width: 'w-24' },
+                { key: 'AltLeft', label: 'Alt', code: 'AltLeft', width: 'w-24' },
+                { key: 'Space', label: 'Space', code: 'Space', width: 'flex-1' },
+                { key: 'AltRight', label: 'Alt', code: 'AltRight', width: 'w-24' },
+                { key: 'MetaRight', label: 'Meta', code: 'MetaRight', width: 'w-24' },
+                { key: 'ControlRight', label: 'Ctrl', code: 'ControlRight', width: 'w-24' }
+            ],
+            // Row 7 - Arrow Keys
+            [
+                { key: 'ArrowLeft', label: '←', code: 'ArrowLeft', width: 'w-20' },
+                { key: 'ArrowUp', label: '↑', code: 'ArrowUp', width: 'w-20' },
+                { key: 'ArrowDown', label: '↓', code: 'ArrowDown', width: 'w-20' },
+                { key: 'ArrowRight', label: '→', code: 'ArrowRight', width: 'w-20' }
+            ]
+        ];
+        
+        // Initialize
+        function init() {
+            renderKeyboard();
+            setupEventListeners();
+            hideOnboardingTooltip();
+        }
+        
+        // Render Visual Keyboard
+        function renderKeyboard() {
+            const keyboardEl = document.getElementById('keyboard');
+            keyboardEl.innerHTML = '';
+            
+            keyLayout.forEach((row, rowIndex) => {
+                const rowEl = document.createElement('div');
+                rowEl.className = 'flex gap-2 mb-2 justify-center';
+                
+                row.forEach(keyConfig => {
+                    const keyEl = createKeyElement(keyConfig);
+                    rowEl.appendChild(keyEl);
+                    state.keyMap.set(keyConfig.code, keyEl);
+                });
+                
+                keyboardEl.appendChild(rowEl);
+            });
+        }
+        
+        // Create Key Element
+        function createKeyElement(config) {
+            const keyEl = document.createElement('button');
+            keyEl.className = `key ${config.width} h-14 bg-slate-700/50 backdrop-blur-sm rounded-lg border border-slate-600 text-white font-semibold text-sm md:text-base flex items-center justify-center focus:outline-none focus:ring-2 focus:ring-cyan-400 focus:ring-offset-2 focus:ring-offset-slate-900`;
+            keyEl.textContent = config.label;
+            keyEl.setAttribute('data-code', config.code);
+            keyEl.setAttribute('data-key', config.key);
+            keyEl.setAttribute('aria-label', `Key ${config.label}`);
+            keyEl.setAttribute('tabindex', '0');
+            
+            // Click handler
+            keyEl.addEventListener('click', () => {
+                simulateKeyPress(config.code, config.key);
+            });
+            
+            // Touch support for mobile
+            keyEl.addEventListener('touchstart', (e) => {
+                e.preventDefault();
+                simulateKeyPress(config.code, config.key);
+            });
+            
+            return keyEl;
+        }
+        
+        // Simulate Key Press (for click events)
+        function simulateKeyPress(code, key) {
+            const event = {
+                code: code,
+                key: key,
+                keyCode: getKeyCode(key, code),
+                preventDefault: () => {}
+            };
+            handleKeyDown(event);
+            setTimeout(() => handleKeyUp(event), 200);
+        }
+        
+        // Get KeyCode (backwards compatibility)
+        function getKeyCode(key, code) {
+            // Map common keys to keyCode
+            const keyCodeMap = {
+                'Enter': 13,
+                'Escape': 27,
+                'Space': 32,
+                'Tab': 9,
+                'Backspace': 8,
+                'ArrowLeft': 37,
+                'ArrowUp': 38,
+                'ArrowRight': 39,
+                'ArrowDown': 40,
+                'ShiftLeft': 16,
+                'ShiftRight': 16,
+                'ControlLeft': 17,
+                'ControlRight': 17,
+                'AltLeft': 18,
+                'AltRight': 18,
+                'MetaLeft': 91,
+                'MetaRight': 91,
+                'CapsLock': 20
+            };
+            
+            if (keyCodeMap[code]) return keyCodeMap[code];
+            
+            // Letters
+            if (code.startsWith('Key')) {
+                return code.charCodeAt(3);
+            }
+            
+            // Numbers
+            if (code.startsWith('Digit')) {
+                return parseInt(code.slice(5)) + 48;
+            }
+            
+            // Default fallback
+            return 0;
+        }
+        
+        // Setup Event Listeners
+        function setupEventListeners() {
+            // Physical keyboard events
+            document.addEventListener('keydown', handleKeyDown);
+            document.addEventListener('keyup', handleKeyUp);
+            
+            // Theme toggle
+            document.getElementById('themeToggle').addEventListener('click', toggleTheme);
+            
+            // Sound toggle
+            document.getElementById('soundToggle').addEventListener('click', toggleSound);
+            
+            // Typing area toggle
+            document.getElementById('typingAreaToggle').addEventListener('click', toggleTypingArea);
+            
+            // Test report
+            document.getElementById('testReportBtn').addEventListener('click', generateTestReport);
+            
+            // Typing area content handling
+            const typingContent = document.getElementById('typingContent');
+            typingContent.addEventListener('keydown', (e) => {
+                if (state.typingAreaEnabled) {
+                    // When typing area is enabled, stop propagation so keys are captured in typing area
+                    e.stopPropagation();
+                }
+            });
+        }
+        
+        // Handle Key Down
+        function handleKeyDown(e) {
+            // Skip if typing area is enabled and focus is in typing area (handled by stopPropagation)
+            // This is a backup check
+            if (state.typingAreaEnabled && document.activeElement === document.getElementById('typingContent')) {
+                return;
+            }
+            
+            const code = e.code;
+            const key = e.key;
+            const keyCode = e.keyCode || getKeyCode(key, code);
+            
+            // Prevent default for certain keys to avoid page navigation
+            if (['Space', 'Tab', 'ArrowUp', 'ArrowDown'].includes(code)) {
+                e.preventDefault();
+            }
+            
+            // Skip if already active (debounce repeat events)
+            if (state.activeKeys.has(code)) {
+                return;
+            }
+            
+            state.activeKeys.add(code);
+            
+            // Update stats
+            state.stats.totalPresses++;
+            state.stats.uniqueKeys.add(code);
+            
+            // Visual feedback
+            activateKey(code);
+            
+            // Show info panel
+            showInfoPanel(key, code, keyCode);
+            
+            // Update last keys
+            addToLastKeys({ key, code, keyCode, type: 'keydown', timestamp: Date.now() });
+            
+            // Update modifiers
+            updateModifiers();
+            
+            // Play sound
+            if (state.soundEnabled) {
+                playKeySound();
+            }
+            
+            // Hide onboarding
+            hideOnboardingTooltip();
+            
+            // ARIA announcement
+            announceKeyPress(key, code);
+        }
+        
+        // Handle Key Up
+        function handleKeyUp(e) {
+            const code = e.code;
+            
+            if (!state.activeKeys.has(code)) {
+                return;
+            }
+            
+            state.activeKeys.delete(code);
+            deactivateKey(code);
+            updateModifiers();
+        }
+        
+        // Activate Key Visual
+        function activateKey(code) {
+            const keyEl = state.keyMap.get(code);
+            if (keyEl) {
+                keyEl.classList.add('key-active', 'key-pressed');
+                
+                // Remove pressed animation after it completes
+                setTimeout(() => {
+                    keyEl.classList.remove('key-pressed');
+                }, 300);
+                
+                // Ripple effect
+                keyEl.classList.add('ripple');
+                setTimeout(() => {
+                    keyEl.classList.remove('ripple');
+                }, 600);
+            }
+        }
+        
+        // Deactivate Key Visual
+        function deactivateKey(code) {
+            const keyEl = state.keyMap.get(code);
+            if (keyEl) {
+                keyEl.classList.remove('key-active');
+            }
+        }
+        
+        // Show Info Panel
+        function showInfoPanel(key, code, keyCode) {
+            const panel = document.getElementById('infoPanel');
+            const keyDisplay = key === ' ' ? 'Space' : (key.length === 1 ? key : key);
+            document.getElementById('infoKey').textContent = keyDisplay;
+            document.getElementById('infoCode').textContent = code;
+            document.getElementById('infoKeyCode').textContent = keyCode;
+            
+            // Reset and show
+            panel.classList.remove('show');
+            // Force reflow
+            void panel.offsetWidth;
+            panel.classList.add('show');
+            panel.style.pointerEvents = 'auto';
+            
+            // Auto-hide after 2 seconds
+            clearTimeout(panel.hideTimeout);
+            panel.hideTimeout = setTimeout(() => {
+                panel.classList.remove('show');
+                panel.style.pointerEvents = 'none';
+            }, 2000);
+        }
+        
+        // Add to Last Keys
+        function addToLastKeys(keyEvent) {
+            state.lastKeys.unshift(keyEvent);
+            if (state.lastKeys.length > state.maxLastKeys) {
+                state.lastKeys.pop();
+            }
+            
+            // Detect combos
+            if (state.activeKeys.size > 1) {
+                const combo = Array.from(state.activeKeys).sort().join('+');
+                if (!state.stats.combos.includes(combo)) {
+                    state.stats.combos.push(combo);
+                }
+            }
+            
+            updateLastKeysDisplay();
+        }
+        
+        // Update Last Keys Display
+        function updateLastKeysDisplay() {
+            const container = document.getElementById('lastKeys');
+            
+            if (state.lastKeys.length === 0) {
+                container.innerHTML = '<p class="text-slate-500 text-center">No keys pressed yet...</p>';
+                return;
+            }
+            
+            const html = state.lastKeys.map((keyEvent, index) => {
+                const time = new Date(keyEvent.timestamp).toLocaleTimeString();
+                const modifiers = getActiveModifiers();
+                const comboText = modifiers.length > 0 ? ` (${modifiers.join('+')})` : '';
+                const keyDisplay = keyEvent.key === ' ' ? 'Space' : (keyEvent.key.length === 1 ? keyEvent.key : keyEvent.key);
+                
+                return `
+                    <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between p-2 mb-2 bg-slate-700/30 rounded border border-slate-600/50 ${index === 0 ? 'border-cyan-400/50' : ''}">
+                        <div class="flex flex-wrap items-center gap-2 sm:gap-4 mb-1 sm:mb-0">
+                            <span class="text-slate-400 text-xs">${time}</span>
+                            <span class="text-cyan-400 font-mono font-semibold">${keyDisplay}</span>
+                            <span class="text-slate-500 text-xs">${keyEvent.code}</span>
+                            <span class="text-slate-600 text-xs">(${keyEvent.keyCode})</span>
+                        </div>
+                        ${comboText ? `<span class="text-purple-400 text-xs">${comboText}</span>` : ''}
+                    </div>
+                `;
+            }).join('');
+            
+            container.innerHTML = html;
+        }
+        
+        // Update Modifiers Display
+        function updateModifiers() {
+            const modifiers = getActiveModifiers();
+            const textEl = document.getElementById('modifiersText');
+            
+            if (modifiers.length === 0) {
+                textEl.textContent = 'None';
+            } else {
+                textEl.textContent = modifiers.join(' + ');
+            }
+        }
+        
+        // Get Active Modifiers
+        function getActiveModifiers() {
+            const modifiers = [];
+            const modifierMap = {
+                'ControlLeft': 'Ctrl',
+                'ControlRight': 'Ctrl',
+                'ShiftLeft': 'Shift',
+                'ShiftRight': 'Shift',
+                'AltLeft': 'Alt',
+                'AltRight': 'Alt',
+                'MetaLeft': 'Meta',
+                'MetaRight': 'Meta'
+            };
+            
+            state.activeKeys.forEach(code => {
+                if (modifierMap[code]) {
+                    modifiers.push(modifierMap[code]);
+                }
+            });
+            
+            return [...new Set(modifiers)]; // Remove duplicates
+        }
+        
+        // Toggle Theme
+        function toggleTheme() {
+            state.isDarkTheme = !state.isDarkTheme;
+            const body = document.body;
+            const html = document.documentElement;
+            const themeText = document.getElementById('themeText');
+            
+            if (state.isDarkTheme) {
+                html.classList.remove('light-theme');
+                body.classList.remove('bg-slate-50');
+                body.classList.add('bg-slate-900');
+                body.classList.remove('text-gray-900');
+                body.classList.add('text-white');
+                themeText.textContent = '🌙 Dark';
+            } else {
+                html.classList.add('light-theme');
+                body.classList.remove('bg-slate-900');
+                body.classList.add('bg-slate-50');
+                body.classList.remove('text-white');
+                body.classList.add('text-gray-900');
+                themeText.textContent = '☀️ Light';
+            }
+        }
+        
+        // Toggle Sound
+        function toggleSound() {
+            state.soundEnabled = !state.soundEnabled;
+            const soundText = document.getElementById('soundText');
+            soundText.textContent = state.soundEnabled ? '🔊 Sound On' : '🔇 Sound Off';
+        }
+        
+        // Play Key Sound
+        function playKeySound() {
+            // Create a simple click sound using Web Audio API
+            const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+            const oscillator = audioContext.createOscillator();
+            const gainNode = audioContext.createGain();
+            
+            oscillator.connect(gainNode);
+            gainNode.connect(audioContext.destination);
+            
+            oscillator.frequency.value = 800;
+            oscillator.type = 'sine';
+            
+            gainNode.gain.setValueAtTime(0.1, audioContext.currentTime);
+            gainNode.gain.exponentialRampToValueAtTime(0.01, audioContext.currentTime + 0.1);
+            
+            oscillator.start(audioContext.currentTime);
+            oscillator.stop(audioContext.currentTime + 0.1);
+        }
+        
+        // Toggle Typing Area
+        function toggleTypingArea() {
+            state.typingAreaEnabled = !state.typingAreaEnabled;
+            const typingArea = document.getElementById('typingArea');
+            const typingAreaText = document.getElementById('typingAreaText');
+            const typingAreaTextMobile = document.getElementById('typingAreaTextMobile');
+            
+            if (state.typingAreaEnabled) {
+                typingArea.classList.remove('hidden');
+                typingAreaText.textContent = '⌨️ Typing Area On';
+                typingAreaTextMobile.textContent = '⌨️ Type On';
+            } else {
+                typingArea.classList.add('hidden');
+                typingAreaText.textContent = '⌨️ Typing Area Off';
+                typingAreaTextMobile.textContent = '⌨️ Type';
+            }
+        }
+        
+        // Generate Test Report
+        function generateTestReport() {
+            const report = {
+                timestamp: new Date().toISOString(),
+                stats: {
+                    totalPresses: state.stats.totalPresses,
+                    uniqueKeys: state.stats.uniqueKeys.size,
+                    combos: state.stats.combos
+                },
+                lastKeys: state.lastKeys.slice(0, 10).map(k => ({
+                    key: k.key,
+                    code: k.code,
+                    keyCode: k.keyCode,
+                    timestamp: new Date(k.timestamp).toISOString()
+                }))
+            };
+            
+            const reportText = JSON.stringify(report, null, 2);
+            
+            // Copy to clipboard
+            navigator.clipboard.writeText(reportText).then(() => {
+                // Show feedback
+                const btn = document.getElementById('testReportBtn');
+                const originalText = btn.innerHTML;
+                btn.innerHTML = '✅ Copied!';
+                btn.classList.add('bg-green-600');
+                btn.classList.remove('bg-cyan-600');
+                
+                setTimeout(() => {
+                    btn.innerHTML = originalText;
+                    btn.classList.remove('bg-green-600');
+                    btn.classList.add('bg-cyan-600');
+                }, 2000);
+            }).catch(err => {
+                console.error('Failed to copy:', err);
+                alert('Failed to copy to clipboard. Check console for report.');
+                console.log(reportText);
+            });
+        }
+        
+        // Hide Onboarding Tooltip
+        function hideOnboardingTooltip() {
+            const tooltip = document.getElementById('onboardingTooltip');
+            if (tooltip) {
+                tooltip.style.display = 'none';
+            }
+        }
+        
+        // ARIA Announcement
+        function announceKeyPress(key, code) {
+            const ariaLive = document.getElementById('ariaLive');
+            ariaLive.textContent = `Key pressed: ${key === ' ' ? 'Space' : key}, code: ${code}`;
+        }
+        
+        // Initialize on load
+        document.addEventListener('DOMContentLoaded', init);
+        
+        // Remove no-js class if JS is enabled
+        document.documentElement.classList.remove('no-js');
+    </script>
+</body>
+</html>
